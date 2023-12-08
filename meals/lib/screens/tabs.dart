@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:meals/data/dummy_data.dart';
 import 'package:meals/screens/categories.dart';
+import 'package:meals/screens/filters.dart';
 import 'package:meals/screens/meals.dart';
 import 'package:meals/models/meal.dart';
 import 'package:meals/widgets/main_drawer.dart';
+
+// ตัวแปรส่วนกลางที่ใช้ร่วมกันได้หมด
+const kInitialFilters = {
+  Filter.glutenFree: false,
+  Filter.lactoseFree: false,
+  Filter.vegetarian: false,
+  Filter.vegan: false,
+};
 
 class TabsScreen extends StatefulWidget {
   const TabsScreen({super.key});
@@ -16,6 +26,7 @@ class TabsScreen extends StatefulWidget {
 class _TabsScreenState extends State<TabsScreen> {
   int _selectedPageIndex = 0;
   final List<Meal> _favoriteMeals = [];
+  Map<Filter, bool> _selectedFilters = kInitialFilters;
 
   // snack bar เพื่อโชว์ข้อมูลว่าเรากด Icon star
   void _showInfoMessage(String message) {
@@ -49,18 +60,53 @@ class _TabsScreenState extends State<TabsScreen> {
     });
   }
 
-  void _setScreen(String identifier) {
+  void _setScreen(String identifier) async {
     if (identifier == 'filters') {
-    } else {
-      // ถ้าเรากดคลิกที่ 'Meals' ใน main_drawer.dart มันจะทำการปิด Drawer ทันที
-      Navigator.of(context).pop();
+      // เมื่อกด Filters ที่หน้า tabs แล้วจะ push ไปที่หน้า filter จากนั้นจะทำการ map ค่า ระหว่าง Filter คู่กับ Boolean
+      final result = await Navigator.of(context).push<Map<Filter, bool>>(
+        MaterialPageRoute(
+          builder: (ctx) => FiltersScreen(
+            currentFilters: _selectedFilters,
+          ),
+        ),
+      );
+      print(result);
+      setState(() {
+        // ถ้า result เป็นค่าว่าง มันจะมีค่า = kInitialFilters
+        _selectedFilters = result ?? kInitialFilters;
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final availableMeals = dummyMeals.where((meal) {
+      // เงื่อนไข 1 : Map<Filter, bool> _selectedFilters = {
+      //             Filter.glutenFree: true,
+      //             Filter.lactoseFree: false,
+      //             Filter.vegetarian: false,
+      //             Filter.vegan: false,
+      //            };
+      // เงื่อนไข 2 : meal.isGlutenFree เป็น false (คืออาหารนั้นไม่ได้ "gluten-free"), แล้วเงื่อนไขจะส่งค่า false กลับมา ซึ่งหมายความว่าอาหารนั้นจะไม่ถูกรวมเข้าไปใน availableMeals.
+      if (_selectedFilters[Filter.glutenFree]! && !meal.isGlutenFree) {
+        print('gluten bool is ${meal.isGlutenFree}');
+        return false;
+      }
+      if (_selectedFilters[Filter.lactoseFree]! && !meal.isLactoseFree) {
+        return false;
+      }
+      if (_selectedFilters[Filter.vegetarian]! && !meal.isVegetarian) {
+        return false;
+      }
+      if (_selectedFilters[Filter.vegan]! && !meal.isVegan) {
+        return false;
+      }
+      return true;
+    }).toList();
+
     Widget activePage = CategoriesScreen(
       onToggleFavorite: _toggleMealFavoriteStatus,
+      availableMeals: availableMeals,
     );
     var activePageTitle = 'Categories';
 
