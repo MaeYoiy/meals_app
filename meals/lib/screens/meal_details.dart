@@ -1,22 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:meals/models/meal.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meals/provider/favorites_provider.dart';
 
-class MealDetailsScreen extends StatelessWidget {
-  const MealDetailsScreen(
-      {super.key, required this.meal, required this.onToggleFavorite});
+class MealDetailsScreen extends ConsumerWidget {
+  const MealDetailsScreen({super.key, required this.meal});
 
   final Meal meal;
-  final void Function(Meal meal) onToggleFavorite;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
         appBar: AppBar(
           title: Text(meal.title),
           actions: [
             IconButton(
                 onPressed: () {
-                  onToggleFavorite(meal);
+                  // ใช้ read เพราะปุ่มกดแค่ครั้งเดียว
+                  final wasAdded = ref
+                      .read(favoriteMealsProvider.notifier)
+                      .toggleMealFavoriteStatus(meal);
+                  // snack bar เพื่อโชว์ข้อมูลว่าเรากด Icon star
+                  ScaffoldMessenger.of(context).clearSnackBars();
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text(wasAdded
+                          ? 'Meal added as a favorite.'
+                          : 'Meal removed.')));
                 },
                 icon: const Icon(Icons.star))
           ],

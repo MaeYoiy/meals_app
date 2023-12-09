@@ -4,10 +4,11 @@ import 'package:meals/provider/meals_provider.dart';
 import 'package:meals/screens/categories.dart';
 import 'package:meals/screens/filters.dart';
 import 'package:meals/screens/meals.dart';
-import 'package:meals/models/meal.dart';
+// import 'package:meals/models/meal.dart';
 import 'package:meals/widgets/main_drawer.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:meals/provider/favorites_provider.dart';
 
 // ตัวแปรส่วนกลางที่ใช้ร่วมกันได้หมด
 const kInitialFilters = {
@@ -28,34 +29,27 @@ class TabsScreen extends ConsumerStatefulWidget {
 
 class _TabsScreenState extends ConsumerState<TabsScreen> {
   int _selectedPageIndex = 0;
-  final List<Meal> _favoriteMeals = [];
   Map<Filter, bool> _selectedFilters = kInitialFilters;
 
-  // snack bar เพื่อโชว์ข้อมูลว่าเรากด Icon star
-  void _showInfoMessage(String message) {
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
-  }
-
+  // ณ ตอนนี้เรามี Provider จัดการกับเพิ่มอาหารโปรด และลดอาหารโปรดแล้ว ดังนั้น _toggleMealFavoriteStatus จึงไม่ได้ใช้อีกต่อไป
   // function ที่ใช้เพิ่มอาหารโปรด และลดอาหารโปรด
-  void _toggleMealFavoriteStatus(Meal meal) {
-    // contains เป็นเมธอดที่ใช้ตรวจสอบว่าค่าอยู่ในหรือไม่ ซึ่งคอลเล็กชันที่รองรับ contains ได้รวมถึง List, Set, และ Map (เมื่อใช้กับ Map จะเป็นการตรวจสอบว่ามี key หรือไม่).
-    // return True or False
-    final isExisting = _favoriteMeals.contains(meal);
+  // void _toggleMealFavoriteStatus(Meal meal) {
+  // contains เป็นเมธอดที่ใช้ตรวจสอบว่าค่าอยู่ในหรือไม่ ซึ่งคอลเล็กชันที่รองรับ contains ได้รวมถึง List, Set, และ Map (เมื่อใช้กับ Map จะเป็นการตรวจสอบว่ามี key หรือไม่).
+  // return True or False
+  //   final isExisting = _favoriteMeals.contains(meal);
 
-    if (isExisting) {
-      setState(() {
-        _favoriteMeals.remove(meal);
-      });
-      _showInfoMessage('Meal is no longer a favorite.');
-    } else {
-      setState(() {
-        _favoriteMeals.add(meal);
-      });
-      _showInfoMessage('Marked as a favorite!');
-    }
-  }
+  //   if (isExisting) {
+  //     setState(() {
+  //       _favoriteMeals.remove(meal);
+  //     });
+  //     _showInfoMessage('Meal is no longer a favorite.');
+  //   } else {
+  //     setState(() {
+  //       _favoriteMeals.add(meal);
+  //     });
+  //     _showInfoMessage('Marked as a favorite!');
+  //   }
+  // }
 
   void _selectedPage(int index) {
     setState(() {
@@ -109,16 +103,15 @@ class _TabsScreenState extends ConsumerState<TabsScreen> {
     }).toList();
 
     Widget activePage = CategoriesScreen(
-      onToggleFavorite: _toggleMealFavoriteStatus,
       availableMeals: availableMeals,
     );
     var activePageTitle = 'Categories';
 
     if (_selectedPageIndex == 1) {
+      final favoriteMeals = ref.watch(favoriteMealsProvider);
       // TabsScreen -> MealsScreen -> MealDetailsScreen
       activePage = MealsScreen(
-        meals: _favoriteMeals,
-        onToggleFavorite: _toggleMealFavoriteStatus,
+        meals: favoriteMeals,
       );
       activePageTitle = 'Your Favorites';
     }
