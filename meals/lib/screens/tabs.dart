@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:meals/provider/meals_provider.dart';
 // import 'package:meals/data/dummy_data.dart';
 import 'package:meals/screens/categories.dart';
 import 'package:meals/screens/filters.dart';
@@ -9,6 +8,7 @@ import 'package:meals/widgets/main_drawer.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:meals/provider/favorites_provider.dart';
+import 'package:meals/provider/filters_provider.dart';
 
 // ตัวแปรส่วนกลางที่ใช้ร่วมกันได้หมด
 const kInitialFilters = {
@@ -29,8 +29,6 @@ class TabsScreen extends ConsumerStatefulWidget {
 
 class _TabsScreenState extends ConsumerState<TabsScreen> {
   int _selectedPageIndex = 0;
-  Map<Filter, bool> _selectedFilters = kInitialFilters;
-
   // ณ ตอนนี้เรามี Provider จัดการกับเพิ่มอาหารโปรด และลดอาหารโปรดแล้ว ดังนั้น _toggleMealFavoriteStatus จึงไม่ได้ใช้อีกต่อไป
   // function ที่ใช้เพิ่มอาหารโปรด และลดอาหารโปรด
   // void _toggleMealFavoriteStatus(Meal meal) {
@@ -58,49 +56,21 @@ class _TabsScreenState extends ConsumerState<TabsScreen> {
   }
 
   void _setScreen(String identifier) async {
+    Navigator.of(context).pop();
     if (identifier == 'filters') {
       // เมื่อกด Filters ที่หน้า tabs แล้วจะ push ไปที่หน้า filter จากนั้นจะทำการ map ค่า ระหว่าง Filter คู่กับ Boolean
-      final result = await Navigator.of(context).push<Map<Filter, bool>>(
+      await Navigator.of(context).push<Map<Filter, bool>>(
         MaterialPageRoute(
-          builder: (ctx) => FiltersScreen(
-            currentFilters: _selectedFilters,
-          ),
+          builder: (ctx) => const FiltersScreen(),
         ),
       );
-      print(result);
-      setState(() {
-        // ถ้า result เป็นค่าว่าง มันจะมีค่า = kInitialFilters
-        _selectedFilters = result ?? kInitialFilters;
-      });
+      //print(result);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final meals = ref.watch(mealsProvider);
-    final availableMeals = meals.where((meal) {
-      // เงื่อนไข 1 : Map<Filter, bool> _selectedFilters = {
-      //             Filter.glutenFree: true,
-      //             Filter.lactoseFree: false,
-      //             Filter.vegetarian: false,
-      //             Filter.vegan: false,
-      //            };
-      // เงื่อนไข 2 : meal.isGlutenFree เป็น false (คืออาหารนั้นไม่ได้ "gluten-free"), แล้วเงื่อนไขจะส่งค่า false กลับมา ซึ่งหมายความว่าอาหารนั้นจะไม่ถูกรวมเข้าไปใน availableMeals.
-      if (_selectedFilters[Filter.glutenFree]! && !meal.isGlutenFree) {
-        print('gluten bool is ${meal.isGlutenFree}');
-        return false;
-      }
-      if (_selectedFilters[Filter.lactoseFree]! && !meal.isLactoseFree) {
-        return false;
-      }
-      if (_selectedFilters[Filter.vegetarian]! && !meal.isVegetarian) {
-        return false;
-      }
-      if (_selectedFilters[Filter.vegan]! && !meal.isVegan) {
-        return false;
-      }
-      return true;
-    }).toList();
+    final availableMeals = ref.watch(filterMealsProvider);
 
     Widget activePage = CategoriesScreen(
       availableMeals: availableMeals,
