@@ -30,18 +30,37 @@ class MealDetailsScreen extends ConsumerWidget {
                         ? 'Meal added as a favorite.'
                         : 'Meal removed.')));
               },
-              icon: Icon(isFavorite ? Icons.star : Icons.star_border),
+              icon: AnimatedSwitcher(
+                duration: const Duration(milliseconds: 300),
+                transitionBuilder: (child, animation) {
+                  return RotationTransition(
+                    turns: Tween<double>(begin: 0.8, end: 1).animate(animation),
+                    child: child,
+                  );
+                },
+                child: Icon(
+                  isFavorite ? Icons.star : Icons.star_border,
+                  // ถ้าเราต้องการแยกความแตกต่างระหว่าง Widget 2 รายการที่เป็นประเภทเดียวกันแต่มีข้อมูลแนบต่างกัน
+                  // ดังนั้นเราต้องเพิ่ม Key เพราะ AnimatedSwitcher จะนำ Key มาพิจารณาเพื่อดูว่าในทางเทคนิคแล้วเรามี Widget ที่แตกต่างจากเมื่อก่อนหรือไม่
+                  // แม้ว่าประเภทอาจจะเหมือนกันก็ตาม และ Key ที่เพิ่มนี้เป็น Key isFavorite ดังนั้นมันจะเปลี่ยนระหว่างจริงและเท็จ
+                  // และจากนั้น Flutter จะเห็นว่ามีบางสิ่งที่เปลี่ยนแปลงที่นี่และจากนั้นจะเรียกใช้ Animation นี้
+                  key: ValueKey(isFavorite),
+                ),
+              ),
             ),
           ],
         ),
         body: SingleChildScrollView(
           child: Column(
             children: [
-              Image.network(
-                meal.imageUrl,
-                height: 300,
-                width: double.infinity,
-                fit: BoxFit.cover,
+              Hero(
+                tag: meal.id,
+                child: Image.network(
+                  meal.imageUrl,
+                  height: 300,
+                  width: double.infinity,
+                  fit: BoxFit.cover,
+                ),
               ),
               const SizedBox(height: 14),
               Text(

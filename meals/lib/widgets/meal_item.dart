@@ -36,12 +36,15 @@ class MealItem extends StatelessWidget {
         // Stack() เริ่มจากล่างขึ้นบนเหมือน Stack หรือ Widget แรกจะเป็น Widget ล่างสุด เช่น FadeInImage()
         child: Stack(
           children: [
-            FadeInImage(
-              placeholder: MemoryImage(kTransparentImage),
-              image: NetworkImage(meal.imageUrl),
-              fit: BoxFit.cover,
-              height: 200,
-              width: double.infinity,
+            Hero(
+              tag: meal.id,
+              child: FadeInImage(
+                placeholder: MemoryImage(kTransparentImage),
+                image: NetworkImage(meal.imageUrl),
+                fit: BoxFit.cover,
+                height: 200,
+                width: double.infinity,
+              ),
             ),
             Positioned(
               bottom: 0,
